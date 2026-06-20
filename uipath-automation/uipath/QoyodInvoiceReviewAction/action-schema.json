@@ -1,0 +1,79 @@
+{
+  "inputs": {
+    "type": "object",
+    "properties": {
+      "jobId": {
+        "type": "string",
+        "required": true,
+        "description": "Backend intake job ID"
+      },
+      "validationResult": {
+        "type": "object",
+        "required": false,
+        "description": "Reconciliation result from extraction"
+      },
+      "bucketPath": {
+        "type": "string",
+        "required": false,
+        "description": "Source invoice path in the Orchestrator bucket"
+      },
+      "attachmentName": {
+        "type": "string",
+        "required": false,
+        "description": "Uploaded invoice file name"
+      }
+    }
+  },
+  "outputs": {
+    "type": "object",
+    "properties": {
+      "reviewDecision": {
+        "type": "string",
+        "required": true,
+        "description": "approve_for_qoyod, save_corrections, rejected, or exception"
+      },
+      "mappingStatus": {
+        "type": "string",
+        "required": true,
+        "description": "ready or missing_mapping"
+      },
+      "reviewNotes": {
+        "type": "string",
+        "required": false,
+        "description": "Finance reviewer notes"
+      },
+      "errorCode": {
+        "type": "string",
+        "required": false,
+        "description": "Exception code when routed to exception resolution"
+      }
+    }
+  },
+  "inOuts": {
+    "type": "object",
+    "properties": {
+      "invoiceDraft": {
+        "type": "object",
+        "required": true,
+        "description": "Editable normalized InvoiceDraft payload"
+      }
+    }
+  },
+  "outcomes": {
+    "type": "object",
+    "properties": {
+      "ApproveForQoyod": {
+        "type": "string"
+      },
+      "SaveCorrections": {
+        "type": "string"
+      },
+      "Reject": {
+        "type": "string"
+      },
+      "SendToException": {
+        "type": "string"
+      }
+    }
+  }
+}

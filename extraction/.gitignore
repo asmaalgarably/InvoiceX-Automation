@@ -1,0 +1,6 @@
+.env
+*.json
+ai_core/
+__pycache__/
+dataset/
+venv/

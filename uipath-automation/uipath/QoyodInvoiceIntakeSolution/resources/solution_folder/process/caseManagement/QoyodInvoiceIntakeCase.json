@@ -1,0 +1,58 @@
+{
+  "docVersion": "1.0.0",
+  "resource": {
+    "name": "QoyodInvoiceIntakeCase",
+    "kind": "process",
+    "type": "caseManagement",
+    "apiVersion": "orchestrator.uipath.com/v1",
+    "projectKey": "f6b4faf1-9796-4884-bab4-88880f55b97d",
+    "isOverridable": true,
+    "dependencies": [
+      {
+        "kind": "package",
+        "name": "QoyodInvoiceIntakeCase"
+      }
+    ],
+    "runtimeDependencies": [
+      {
+        "bindingType": "app",
+        "bindingKey": "Finance/InvoiceIntake.qoyodinvoicereviewaction",
+        "bindingValues": {
+          "name": {
+            "defaultValue": "qoyodinvoicereviewaction",
+            "isExpression": false
+          },
+          "folderPath": {
+            "defaultValue": "Finance/InvoiceIntake",
+            "isExpression": false
+          }
+        },
+        "resourceKind": "App",
+        "resourceKey": "8a14c8f7-e94e-455f-a601-546a23ff220d",
+        "resourceName": "qoyodinvoicereviewaction",
+        "folderKey": ""
+      }
+    ],
+    "folders": [
+      {
+        "fullyQualifiedName": "solution_folder"
+      }
+    ],
+    "spec": {
+      "type": "CaseManagement",
+      "name": "QoyodInvoiceIntakeCase",
+      "package": {
+        "key": "160b7fa8-7990-484b-b365-0d3f14b1d72e"
+      },
+      "packageName": "QoyodInvoiceIntakeSolution.caseManagement.QoyodInvoiceIntakeCase",
+      "targetFrameworkValue": "Portable",
+      "retentionAction": "Delete",
+      "retentionPeriod": 30,
+      "staleRetentionAction": "Delete",
+      "staleRetentionPeriod": 180
+    },
+    "locks": [],
+    "key": "05b239ac-7a94-4b4b-a341-4216dd2f30d8",
+    "files": []
+  }
+}

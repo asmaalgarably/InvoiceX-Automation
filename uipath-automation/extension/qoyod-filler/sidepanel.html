@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Qoyod Filler</title>
+    <link rel="stylesheet" href="sidepanel.css">
+  </head>
+  <body>
+    <main>
+      <header class="panel-header">
+        <div>
+          <strong>Qoyod Filler</strong>
+          <span>Draft creation helper</span>
+        </div>
+        <span id="status" class="status">Idle</span>
+      </header>
+
+      <section class="section">
+        <div class="section-heading">
+          <h1>Setup</h1>
+          <button id="saveConfig" class="ghost" type="button">Save</button>
+        </div>
+
+        <label>
+          API base URL
+          <input id="apiBaseUrl" placeholder="http://localhost:8787">
+        </label>
+
+        <label>
+          Fill token
+          <input id="fillToken" type="password" autocomplete="off">
+        </label>
+
+        <label>
+          Qoyod base URL
+          <input id="qoyodBaseUrl" placeholder="https://www.qoyod.com">
+        </label>
+      </section>
+
+      <section id="job" class="section job" hidden>
+        <div class="section-heading">
+          <h2>Current Job</h2>
+          <span id="jobMeta"></span>
+        </div>
+        <strong id="jobTitle"></strong>
+      </section>
+
+      <section class="section">
+        <h2>Queue</h2>
+        <div class="stack">
+          <button id="claim" type="button">Claim next reviewed invoice</button>
+          <button id="cancel" class="ghost" type="button" disabled>Release current job</button>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Qoyod Page</h2>
+        <div class="stack">
+          <button id="calibrate" class="secondary" type="button">Calibrate selectors</button>
+          <button id="fill" type="button" disabled>Fill current Qoyod page</button>
+          <button id="saveDraft" class="success" type="button" disabled>Save draft only</button>
+        </div>
+      </section>
+
+      <section class="section grow">
+        <div class="section-heading">
+          <h2>Status Log</h2>
+          <button id="clearLog" class="ghost small" type="button">Clear</button>
+        </div>
+        <pre id="log"></pre>
+      </section>
+    </main>
+    <script src="sidepanel.js"></script>
+  </body>
+</html>

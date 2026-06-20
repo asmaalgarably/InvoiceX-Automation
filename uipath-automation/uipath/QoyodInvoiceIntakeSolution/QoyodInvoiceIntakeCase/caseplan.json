@@ -1,0 +1,950 @@
+{
+    "id": "case-R8kP4mZqT2",
+    "version": "23.0.0",
+    "name": "QoyodInvoiceIntakeCase",
+    "description": "Track 1 Maestro Case for phone-captured invoice intake, external LLM extraction, finance review, Chrome extension Qoyod draft creation, and exception resolution.",
+    "metadata": {
+        "caseIdentifier": "QII",
+        "caseIdentifierType": "constant",
+        "caseAppEnabled": false,
+        "publishVersion": 2,
+        "caseUnifiedSchemaEnabled": true,
+        "caseDirectlyPassTaskOutputs": true,
+        "intsvcActivityConfig": "v2",
+        "caseExitRules": [
+            {
+                "id": "Condition_V7cNq2",
+                "displayName": "Closed stage completed",
+                "marksCaseComplete": true,
+                "rules": [
+                    [
+                        {
+                            "id": "Rule_J4vSx8",
+                            "rule": "required-stages-completed"
+                        }
+                    ]
+                ]
+            }
+        ]
+    },
+    "bindings": [
+        {
+            "id": "bH4qVt9Lp",
+            "name": "name",
+            "type": "string",
+            "resource": "app",
+            "resourceKey": "Finance/InvoiceIntake.qoyodinvoicereviewaction",
+            "default": "qoyodinvoicereviewaction",
+            "propertyAttribute": "name"
+        },
+        {
+            "id": "bJ8mRc2Nx",
+            "name": "folderPath",
+            "type": "string",
+            "resource": "app",
+            "resourceKey": "Finance/InvoiceIntake.qoyodinvoicereviewaction",
+            "default": "Finance/InvoiceIntake",
+            "propertyAttribute": "folderPath"
+        }
+    ],
+    "variables": {
+        "inputs": [
+            {
+                "id": "jobId",
+                "name": "jobId",
+                "type": "string",
+                "default": "",
+                "elementId": "trigger_1"
+            },
+            {
+                "id": "bucketKey",
+                "name": "bucketKey",
+                "type": "string",
+                "default": "",
+                "elementId": "trigger_1"
+            },
+            {
+                "id": "bucketPath",
+                "name": "bucketPath",
+                "type": "string",
+                "default": "",
+                "elementId": "trigger_1"
+            },
+            {
+                "id": "attachmentName",
+                "name": "attachmentName",
+                "type": "string",
+                "default": "",
+                "elementId": "trigger_1"
+            },
+            {
+                "id": "attachmentMimeType",
+                "name": "attachmentMimeType",
+                "type": "string",
+                "default": "",
+                "elementId": "trigger_1"
+            },
+            {
+                "id": "qrTlv",
+                "name": "qrTlv",
+                "type": "jsonSchema",
+                "default": "",
+                "elementId": "trigger_1",
+                "body": {
+                    "type": "object",
+                    "additionalProperties": true
+                }
+            }
+        ],
+        "outputs": [
+            {
+                "id": "qoyodDraftReferenceOut",
+                "name": "qoyodDraftReference",
+                "type": "string",
+                "var": "qoyodDraftReference"
+            },
+            {
+                "id": "caseStatusOut",
+                "name": "caseStatus",
+                "type": "string",
+                "var": "caseStatus"
+            }
+        ],
+        "inputOutputs": [
+            {
+                "id": "jobId",
+                "name": "jobId",
+                "type": "string",
+                "elementId": "trigger_1"
+            },
+            {
+                "id": "bucketKey",
+                "name": "bucketKey",
+                "type": "string",
+                "elementId": "trigger_1"
+            },
+            {
+                "id": "bucketPath",
+                "name": "bucketPath",
+                "type": "string",
+                "elementId": "trigger_1"
+            },
+            {
+                "id": "attachmentName",
+                "name": "attachmentName",
+                "type": "string",
+                "elementId": "trigger_1"
+            },
+            {
+                "id": "attachmentMimeType",
+                "name": "attachmentMimeType",
+                "type": "string",
+                "elementId": "trigger_1"
+            },
+            {
+                "id": "qrTlv",
+                "name": "qrTlv",
+                "type": "jsonSchema",
+                "elementId": "trigger_1",
+                "body": {
+                    "type": "object",
+                    "additionalProperties": true
+                }
+            },
+            {
+                "id": "invoiceDraft",
+                "name": "invoiceDraft",
+                "type": "jsonSchema",
+                "custom": true,
+                "elementId": "root",
+                "body": {
+                    "type": "object",
+                    "additionalProperties": true
+                }
+            },
+            {
+                "id": "validationResult",
+                "name": "validationResult",
+                "type": "jsonSchema",
+                "custom": true,
+                "elementId": "root",
+                "body": {
+                    "type": "object",
+                    "additionalProperties": true
+                }
+            },
+            {
+                "id": "reviewDecision",
+                "name": "reviewDecision",
+                "type": "string",
+                "default": "",
+                "custom": true,
+                "elementId": "root"
+            },
+            {
+                "id": "mappingStatus",
+                "name": "mappingStatus",
+                "type": "string",
+                "default": "",
+                "custom": true,
+                "elementId": "root"
+            },
+            {
+                "id": "qoyodDraftStatus",
+                "name": "qoyodDraftStatus",
+                "type": "string",
+                "default": "",
+                "custom": true,
+                "elementId": "root"
+            },
+            {
+                "id": "qoyodDraftReference",
+                "name": "qoyodDraftReference",
+                "type": "string",
+                "default": "",
+                "elementId": "root"
+            },
+            {
+                "id": "errorCode",
+                "name": "errorCode",
+                "type": "string",
+                "default": "",
+                "custom": true,
+                "elementId": "root"
+            },
+            {
+                "id": "caseStatus",
+                "name": "caseStatus",
+                "type": "string",
+                "default": "",
+                "elementId": "root"
+            },
+            {
+                "id": "reviewNotes",
+                "name": "reviewNotes",
+                "type": "string",
+                "default": "",
+                "custom": true,
+                "elementId": "root"
+            },
+            {
+                "id": "action",
+                "name": "action",
+                "type": "string",
+                "default": "",
+                "custom": true,
+                "elementId": "root"
+            }
+        ]
+    },
+    "nodes": [
+        {
+            "id": "trigger_1",
+            "type": "case-management:Trigger",
+            "data": {
+                "parentElement": {
+                    "id": "root",
+                    "type": "case-management:root"
+                },
+                "label": "Start Invoice Intake",
+                "description": "Manual or API start after the phone PWA uploads the source invoice and QR metadata."
+            }
+        },
+        {
+            "id": "Stage_q7Mnk2",
+            "type": "case-management:Stage",
+            "data": {
+                "label": "Capture Intake",
+                "description": "Register the source file, QR TLV payload, bucket path, and local job ID created by the capture API.",
+                "isRequired": false,
+                "parentElement": {
+                    "id": "root",
+                    "type": "case-management:root"
+                },
+                "isInvalidDropTarget": false,
+                "isPendingParent": false,
+                "tasks": [
+                    [
+                        {
+                            "id": "tQ2mN8pLa",
+                            "elementId": "Stage_q7Mnk2-tQ2mN8pLa",
+                            "displayName": "Register Capture Payload",
+                            "description": "Placeholder API workflow that records job and attachment metadata in the Case.",
+                            "isRequired": true,
+                            "shouldRunOnlyOnce": true,
+                            "type": "api-workflow",
+                            "data": {}
+                        }
+                    ]
+                ],
+                "entryConditions": [
+                    {
+                        "id": "Condition_A2mKq7",
+                        "displayName": "Case entered",
+                        "isInterrupting": false,
+                        "rules": [
+                            [
+                                {
+                                    "id": "Rule_L9pVx4",
+                                    "rule": "case-entered"
+                                }
+                            ]
+                        ]
+                    }
+                ],
+                "exitConditions": [
+                    {
+                        "id": "Condition_E8sRt3",
+                        "displayName": "Capture registered",
+                        "type": "exit-only",
+                        "marksStageComplete": true,
+                        "rules": [
+                            [
+                                {
+                                    "id": "Rule_B5nYq6",
+                                    "rule": "required-tasks-completed"
+                                }
+                            ]
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "id": "Stage_Y4pLq8",
+            "type": "case-management:Stage",
+            "data": {
+                "label": "Extraction And Reconciliation",
+                "description": "Start external or local LLM extraction through the backend extraction API, then reconcile QR and extracted totals.",
+                "isRequired": false,
+                "parentElement": {
+                    "id": "root",
+                    "type": "case-management:root"
+                },
+                "isInvalidDropTarget": false,
+                "isPendingParent": false,
+                "tasks": [
+                    [
+                        {
+                            "id": "tE7xK3mQa",
+                            "elementId": "Stage_Y4pLq8-tE7xK3mQa",
+                            "displayName": "Extract Invoice Draft",
+                            "description": "Placeholder API workflow that will call POST /api/extraction/jobs/{jobId}/start when Case runtime is available.",
+                            "isRequired": true,
+                            "shouldRunOnlyOnce": true,
+                            "type": "api-workflow",
+                            "data": {}
+                        }
+                    ],
+                    [
+                        {
+                            "id": "tV6pR2nLb",
+                            "elementId": "Stage_Y4pLq8-tV6pR2nLb",
+                            "displayName": "Validate QR OCR Totals And Duplicates",
+                            "description": "Placeholder agent task that checks totals, required fields, duplicates, and confidence gates.",
+                            "isRequired": true,
+                            "shouldRunOnlyOnce": true,
+                            "type": "agent",
+                            "data": {}
+                        }
+                    ]
+                ],
+                "entryConditions": [
+                    {
+                        "id": "Condition_G3tMz5",
+                        "displayName": "After capture intake",
+                        "isInterrupting": false,
+                        "rules": [
+                            [
+                                {
+                                    "id": "Rule_X2vPk8",
+                                    "rule": "selected-stage-completed",
+                                    "selectedStageId": "Stage_q7Mnk2"
+                                }
+                            ]
+                        ]
+                    }
+                ],
+                "exitConditions": [
+                    {
+                        "id": "Condition_N6rJv2",
+                        "displayName": "Extraction reconciled",
+                        "type": "exit-only",
+                        "marksStageComplete": true,
+                        "rules": [
+                            [
+                                {
+                                    "id": "Rule_C9mLq4",
+                                    "rule": "required-tasks-completed"
+                                }
+                            ]
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "id": "Stage_A9vTr3",
+            "type": "case-management:Stage",
+            "data": {
+                "label": "Finance Review And Mapping",
+                "description": "Human task for finance to correct extracted fields, choose supplier/item/expense mappings, and approve only draft creation.",
+                "isRequired": false,
+                "parentElement": {
+                    "id": "root",
+                    "type": "case-management:root"
+                },
+                "isInvalidDropTarget": false,
+                "isPendingParent": false,
+                "tasks": [
+                    [
+                        {
+                            "id": "tA4mC9qRs",
+                            "elementId": "Stage_A9vTr3-tA4mC9qRs",
+                            "displayName": "Review Correct And Map Invoice",
+                            "description": "Placeholder Action Center task backed by the Qoyod invoice review Coded Action App.",
+                            "isRequired": true,
+                            "shouldRunOnlyOnce": false,
+                            "type": "action",
+                            "data": {
+                                "taskTitle": "Review extracted invoice and approve Qoyod draft creation",
+                                "priority": "High",
+                                "recipient": {
+                                    "Type": 2,
+                                    "Value": "malawad@outlook.com"
+                                },
+                                "labels": "qoyod,invoice-intake,finance-review",
+                                "name": "=bindings.bH4qVt9Lp",
+                                "folderPath": "=bindings.bJ8mRc2Nx",
+                                "inputs": [
+                                    {
+                                        "name": "jobId",
+                                        "type": "string",
+                                        "id": "vqK9u7nnY",
+                                        "var": "vqK9u7nnY",
+                                        "elementId": "Stage_A9vTr3-tA4mC9qRs",
+                                        "value": "=vars.jobId"
+                                    },
+                                    {
+                                        "name": "validationResult",
+                                        "type": "json",
+                                        "id": "v0gBkMxvY",
+                                        "var": "v0gBkMxvY",
+                                        "elementId": "Stage_A9vTr3-tA4mC9qRs",
+                                        "value": "=vars.validationResult"
+                                    },
+                                    {
+                                        "name": "bucketPath",
+                                        "type": "string",
+                                        "id": "vFuiIf2iR",
+                                        "var": "vFuiIf2iR",
+                                        "elementId": "Stage_A9vTr3-tA4mC9qRs",
+                                        "value": "=vars.bucketPath"
+                                    },
+                                    {
+                                        "name": "attachmentName",
+                                        "type": "string",
+                                        "id": "vtjDUQ29O",
+                                        "var": "vtjDUQ29O",
+                                        "elementId": "Stage_A9vTr3-tA4mC9qRs",
+                                        "value": "=vars.attachmentName"
+                                    },
+                                    {
+                                        "name": "invoiceDraft",
+                                        "type": "json",
+                                        "id": "vJxayIB7R",
+                                        "var": "vJxayIB7R",
+                                        "elementId": "Stage_A9vTr3-tA4mC9qRs",
+                                        "value": "=vars.invoiceDraft"
+                                    }
+                                ],
+                                "outputs": [
+                                    {
+                                        "name": "reviewDecision",
+                                        "type": "string",
+                                        "id": "reviewDecision",
+                                        "var": "reviewDecision",
+                                        "value": "reviewDecision",
+                                        "source": "=reviewDecision",
+                                        "target": "=reviewDecision",
+                                        "elementId": "Stage_A9vTr3-tA4mC9qRs"
+                                    },
+                                    {
+                                        "name": "mappingStatus",
+                                        "type": "string",
+                                        "id": "mappingStatus",
+                                        "var": "mappingStatus",
+                                        "value": "mappingStatus",
+                                        "source": "=mappingStatus",
+                                        "target": "=mappingStatus",
+                                        "elementId": "Stage_A9vTr3-tA4mC9qRs"
+                                    },
+                                    {
+                                        "name": "reviewNotes",
+                                        "type": "string",
+                                        "id": "reviewNotes",
+                                        "var": "reviewNotes",
+                                        "value": "reviewNotes",
+                                        "source": "=reviewNotes",
+                                        "target": "=reviewNotes",
+                                        "elementId": "Stage_A9vTr3-tA4mC9qRs"
+                                    },
+                                    {
+                                        "name": "errorCode",
+                                        "type": "string",
+                                        "id": "errorCode",
+                                        "var": "errorCode",
+                                        "value": "errorCode",
+                                        "source": "=errorCode",
+                                        "target": "=errorCode",
+                                        "elementId": "Stage_A9vTr3-tA4mC9qRs"
+                                    },
+                                    {
+                                        "name": "invoiceDraft",
+                                        "type": "json",
+                                        "id": "invoiceDraft",
+                                        "var": "invoiceDraft",
+                                        "value": "invoiceDraft",
+                                        "source": "=invoiceDraft",
+                                        "target": "=invoiceDraft",
+                                        "elementId": "Stage_A9vTr3-tA4mC9qRs"
+                                    },
+                                    {
+                                        "name": "Action",
+                                        "type": "string",
+                                        "id": "action",
+                                        "var": "action",
+                                        "value": "action",
+                                        "source": "=Action",
+                                        "target": "=action",
+                                        "elementId": "Stage_A9vTr3-tA4mC9qRs"
+                                    }
+                                ]
+                            },
+                            "entryConditions": [
+                                {
+                                    "id": "cV7mQp2Ks",
+                                    "displayName": "Current stage entered",
+                                    "rules": [
+                                        [
+                                            {
+                                                "id": "rN4xJt8Qa",
+                                                "rule": "current-stage-entered"
+                                            }
+                                        ]
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                ],
+                "entryConditions": [
+                    {
+                        "id": "Condition_H5xQr9",
+                        "displayName": "After extraction reconciliation",
+                        "isInterrupting": false,
+                        "rules": [
+                            [
+                                {
+                                    "id": "Rule_M7tCp2",
+                                    "rule": "selected-stage-completed",
+                                    "selectedStageId": "Stage_Y4pLq8",
+                                    "conditionExpression": "=js:vars.errorCode === ''"
+                                }
+                            ]
+                        ]
+                    }
+                ],
+                "exitConditions": [
+                    {
+                        "id": "Condition_R4pNx7",
+                        "displayName": "Finance review completed",
+                        "type": "wait-for-user",
+                        "marksStageComplete": true,
+                        "rules": [
+                            [
+                                {
+                                    "id": "Rule_T8vHy3",
+                                    "rule": "required-tasks-completed"
+                                }
+                            ]
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "id": "Stage_K2mXz7",
+            "type": "case-management:Stage",
+            "data": {
+                "label": "Qoyod Drafting",
+                "description": "Chrome extension handoff to fill the Qoyod draft form in the logged-in user browser and save a draft only.",
+                "isRequired": false,
+                "parentElement": {
+                    "id": "root",
+                    "type": "case-management:root"
+                },
+                "isInvalidDropTarget": false,
+                "isPendingParent": false,
+                "tasks": [
+                    [
+                        {
+                            "id": "tR5kT8vUy",
+                            "elementId": "Stage_K2mXz7-tR5kT8vUy",
+                            "displayName": "Wait For Qoyod Extension Draft Save",
+                            "description": "Placeholder task that waits for the Qoyod Chrome extension to claim, fill, and save the reviewed draft.",
+                            "isRequired": true,
+                            "shouldRunOnlyOnce": false,
+                            "type": "api-workflow",
+                            "data": {}
+                        }
+                    ]
+                ],
+                "entryConditions": [
+                    {
+                        "id": "Condition_Z9hQv4",
+                        "displayName": "Finance approved draft creation",
+                        "isInterrupting": false,
+                        "rules": [
+                            [
+                                {
+                                    "id": "Rule_P3kTm6",
+                                    "rule": "user-selected-stage",
+                                    "conditionExpression": "=js:(vars.reviewDecision === 'approve_for_qoyod') || (vars.mappingStatus === 'ready')"
+                                }
+                            ]
+                        ]
+                    }
+                ],
+                "exitConditions": [
+                    {
+                        "id": "Condition_D2sVp8",
+                        "displayName": "Qoyod draft saved",
+                        "type": "exit-only",
+                        "marksStageComplete": true,
+                        "rules": [
+                            [
+                                {
+                                    "id": "Rule_W6nRj9",
+                                    "rule": "required-tasks-completed"
+                                }
+                            ]
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "id": "Stage_P6nRb4",
+            "type": "case-management:ExceptionStage",
+            "data": {
+                "label": "Exception Resolution",
+                "description": "Human resolution lane for invalid QR, total mismatch, missing mapping, duplicate invoice, login, selector, or attachment failures.",
+                "isRequired": false,
+                "parentElement": {
+                    "id": "root",
+                    "type": "case-management:root"
+                },
+                "isInvalidDropTarget": false,
+                "isPendingParent": false,
+                "tasks": [
+                    [
+                        {
+                            "id": "tX8nJ2pWq",
+                            "elementId": "Stage_P6nRb4-tX8nJ2pWq",
+                            "displayName": "Resolve Invoice Intake Exception",
+                            "description": "Placeholder Action Center task for exception decisions, reject, rework, or manual resolution.",
+                            "isRequired": true,
+                            "shouldRunOnlyOnce": false,
+                            "type": "action",
+                            "data": {
+                                "taskTitle": "Resolve Qoyod invoice intake exception",
+                                "priority": "High",
+                                "recipient": {
+                                    "Type": 2,
+                                    "Value": "malawad@outlook.com"
+                                },
+                                "labels": "qoyod,invoice-intake,exception-resolution",
+                                "name": "=bindings.bH4qVt9Lp",
+                                "folderPath": "=bindings.bJ8mRc2Nx",
+                                "inputs": [
+                                    {
+                                        "name": "jobId",
+                                        "type": "string",
+                                        "id": "vX2pL8qNs",
+                                        "var": "vX2pL8qNs",
+                                        "elementId": "Stage_P6nRb4-tX8nJ2pWq",
+                                        "value": "=vars.jobId"
+                                    },
+                                    {
+                                        "name": "validationResult",
+                                        "type": "json",
+                                        "id": "vR7mQt4Kp",
+                                        "var": "vR7mQt4Kp",
+                                        "elementId": "Stage_P6nRb4-tX8nJ2pWq",
+                                        "value": "=vars.validationResult"
+                                    },
+                                    {
+                                        "name": "bucketPath",
+                                        "type": "string",
+                                        "id": "vM9kCx2Ra",
+                                        "var": "vM9kCx2Ra",
+                                        "elementId": "Stage_P6nRb4-tX8nJ2pWq",
+                                        "value": "=vars.bucketPath"
+                                    },
+                                    {
+                                        "name": "attachmentName",
+                                        "type": "string",
+                                        "id": "vN4sWp8Ty",
+                                        "var": "vN4sWp8Ty",
+                                        "elementId": "Stage_P6nRb4-tX8nJ2pWq",
+                                        "value": "=vars.attachmentName"
+                                    },
+                                    {
+                                        "name": "invoiceDraft",
+                                        "type": "json",
+                                        "id": "vC5hMz7Qb",
+                                        "var": "vC5hMz7Qb",
+                                        "elementId": "Stage_P6nRb4-tX8nJ2pWq",
+                                        "value": "=vars.invoiceDraft"
+                                    }
+                                ],
+                                "outputs": [
+                                    {
+                                        "name": "reviewDecision",
+                                        "type": "string",
+                                        "id": "reviewDecision",
+                                        "var": "reviewDecision",
+                                        "value": "reviewDecision",
+                                        "source": "=reviewDecision",
+                                        "target": "=reviewDecision",
+                                        "elementId": "Stage_P6nRb4-tX8nJ2pWq"
+                                    },
+                                    {
+                                        "name": "mappingStatus",
+                                        "type": "string",
+                                        "id": "mappingStatus",
+                                        "var": "mappingStatus",
+                                        "value": "mappingStatus",
+                                        "source": "=mappingStatus",
+                                        "target": "=mappingStatus",
+                                        "elementId": "Stage_P6nRb4-tX8nJ2pWq"
+                                    },
+                                    {
+                                        "name": "reviewNotes",
+                                        "type": "string",
+                                        "id": "reviewNotes",
+                                        "var": "reviewNotes",
+                                        "value": "reviewNotes",
+                                        "source": "=reviewNotes",
+                                        "target": "=reviewNotes",
+                                        "elementId": "Stage_P6nRb4-tX8nJ2pWq"
+                                    },
+                                    {
+                                        "name": "errorCode",
+                                        "type": "string",
+                                        "id": "errorCode",
+                                        "var": "errorCode",
+                                        "value": "errorCode",
+                                        "source": "=errorCode",
+                                        "target": "=errorCode",
+                                        "elementId": "Stage_P6nRb4-tX8nJ2pWq"
+                                    },
+                                    {
+                                        "name": "invoiceDraft",
+                                        "type": "json",
+                                        "id": "invoiceDraft",
+                                        "var": "invoiceDraft",
+                                        "value": "invoiceDraft",
+                                        "source": "=invoiceDraft",
+                                        "target": "=invoiceDraft",
+                                        "elementId": "Stage_P6nRb4-tX8nJ2pWq"
+                                    },
+                                    {
+                                        "name": "Action",
+                                        "type": "string",
+                                        "id": "action",
+                                        "var": "action",
+                                        "value": "action",
+                                        "source": "=Action",
+                                        "target": "=action",
+                                        "elementId": "Stage_P6nRb4-tX8nJ2pWq"
+                                    }
+                                ]
+                            },
+                            "entryConditions": [
+                                {
+                                    "id": "cK5sRm9Tx",
+                                    "displayName": "Current stage entered",
+                                    "rules": [
+                                        [
+                                            {
+                                                "id": "rP2qLx7Vn",
+                                                "rule": "current-stage-entered"
+                                            }
+                                        ]
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                ],
+                "entryConditions": [
+                    {
+                        "id": "Condition_K5mSt2",
+                        "displayName": "User routed to exception",
+                        "isInterrupting": false,
+                        "rules": [
+                            [
+                                {
+                                    "id": "Rule_Y4qLb7",
+                                    "rule": "user-selected-stage"
+                                }
+                            ]
+                        ]
+                    },
+                    {
+                        "id": "Condition_Q8pCx5",
+                        "displayName": "Extraction exception",
+                        "isInterrupting": true,
+                        "rules": [
+                            [
+                                {
+                                    "id": "Rule_F2tNv6",
+                                    "rule": "selected-stage-completed",
+                                    "selectedStageId": "Stage_Y4pLq8",
+                                    "conditionExpression": "=js:vars.errorCode !== ''"
+                                }
+                            ]
+                        ]
+                    },
+                    {
+                        "id": "Condition_U3vRm9",
+                        "displayName": "Review exception or rejection",
+                        "isInterrupting": true,
+                        "rules": [
+                            [
+                                {
+                                    "id": "Rule_D7kWp2",
+                                    "rule": "selected-stage-completed",
+                                    "selectedStageId": "Stage_A9vTr3",
+                                    "conditionExpression": "=js:(vars.reviewDecision === 'rejected') || (vars.errorCode !== '')"
+                                }
+                            ]
+                        ]
+                    },
+                    {
+                        "id": "Condition_B4nQz8",
+                        "displayName": "Drafting exception",
+                        "isInterrupting": true,
+                        "rules": [
+                            [
+                                {
+                                    "id": "Rule_S9hTx3",
+                                    "rule": "selected-stage-completed",
+                                    "selectedStageId": "Stage_K2mXz7",
+                                    "conditionExpression": "=js:vars.errorCode !== ''"
+                                }
+                            ]
+                        ]
+                    }
+                ],
+                "exitConditions": [
+                    {
+                        "id": "Condition_M2xJq6",
+                        "displayName": "Exception resolved",
+                        "type": "wait-for-user",
+                        "marksStageComplete": true,
+                        "rules": [
+                            [
+                                {
+                                    "id": "Rule_A8vNm4",
+                                    "rule": "required-tasks-completed"
+                                }
+                            ]
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "id": "Stage_D8sHv5",
+            "type": "case-management:Stage",
+            "data": {
+                "label": "Closed",
+                "description": "Complete the Case after Qoyod draft saved, finance rejection, or manually resolved exception.",
+                "isRequired": true,
+                "parentElement": {
+                    "id": "root",
+                    "type": "case-management:root"
+                },
+                "isInvalidDropTarget": false,
+                "isPendingParent": false,
+                "tasks": [
+                    [
+                        {
+                            "id": "tC3hM7sDz",
+                            "elementId": "Stage_D8sHv5-tC3hM7sDz",
+                            "displayName": "Record Case Closure",
+                            "description": "Placeholder API workflow that posts final case status and reference back to the intake API.",
+                            "isRequired": true,
+                            "shouldRunOnlyOnce": true,
+                            "type": "api-workflow",
+                            "data": {}
+                        }
+                    ]
+                ],
+                "entryConditions": [
+                    {
+                        "id": "Condition_C6tWp5",
+                        "displayName": "Draft saved",
+                        "isInterrupting": false,
+                        "rules": [
+                            [
+                                {
+                                    "id": "Rule_N3qLx8",
+                                    "rule": "selected-stage-completed",
+                                    "selectedStageId": "Stage_K2mXz7",
+                                    "conditionExpression": "=js:vars.qoyodDraftStatus === 'draft_saved'"
+                                }
+                            ]
+                        ]
+                    },
+                    {
+                        "id": "Condition_L9mVy2",
+                        "displayName": "Exception closed",
+                        "isInterrupting": false,
+                        "rules": [
+                            [
+                                {
+                                    "id": "Rule_Q5rJk7",
+                                    "rule": "selected-stage-completed",
+                                    "selectedStageId": "Stage_P6nRb4",
+                                    "conditionExpression": "=js:(vars.reviewDecision === 'rejected') || (vars.caseStatus === 'resolved')"
+                                }
+                            ]
+                        ]
+                    }
+                ],
+                "exitConditions": [
+                    {
+                        "id": "Condition_T6pHz4",
+                        "displayName": "Case can complete",
+                        "type": "exit-only",
+                        "marksStageComplete": true,
+                        "rules": [
+                            [
+                                {
+                                    "id": "Rule_Z2sRx9",
+                                    "rule": "required-tasks-completed"
+                                }
+                            ]
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "edges": [],
+    "layout": {}
+}

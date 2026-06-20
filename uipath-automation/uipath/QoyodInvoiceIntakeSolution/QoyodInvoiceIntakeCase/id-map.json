@@ -1,0 +1,30 @@
+{
+    "T01": {
+        "kind": "case",
+        "id": "case-R8kP4mZqT2"
+    },
+    "T04": {
+        "kind": "stage",
+        "id": "Stage_q7Mnk2"
+    },
+    "T05": {
+        "kind": "stage",
+        "id": "Stage_Y4pLq8"
+    },
+    "T06": {
+        "kind": "stage",
+        "id": "Stage_A9vTr3"
+    },
+    "T07": {
+        "kind": "stage",
+        "id": "Stage_K2mXz7"
+    },
+    "T08": {
+        "kind": "stage",
+        "id": "Stage_P6nRb4"
+    },
+    "T09": {
+        "kind": "stage",
+        "id": "Stage_D8sHv5"
+    }
+}

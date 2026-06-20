@@ -1,0 +1,15 @@
+{
+  "name": "Qoyod Invoice Intake",
+  "short_name": "Invoice Intake",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6f8f7",
+  "theme_color": "#0f766e",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
