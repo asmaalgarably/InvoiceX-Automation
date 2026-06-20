@@ -1,0 +1,23 @@
+{
+  "docVersion": "1.0.0",
+  "resource": {
+    "name": "QoyodInvoiceIntakeCase",
+    "kind": "package",
+    "apiVersion": "orchestrator.uipath.com/v1",
+    "projectKey": "f6b4faf1-9796-4884-bab4-88880f55b97d",
+    "isOverridable": true,
+    "dependencies": [],
+    "runtimeDependencies": [],
+    "folders": [
+      {
+        "fullyQualifiedName": "solution_folder"
+      }
+    ],
+    "spec": {
+      "name": "QoyodInvoiceIntakeCase"
+    },
+    "locks": [],
+    "key": "160b7fa8-7990-484b-b365-0d3f14b1d72e",
+    "files": []
+  }
+}

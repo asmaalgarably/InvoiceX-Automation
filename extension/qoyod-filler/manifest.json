@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "Qoyod Invoice Draft Filler",
+  "version": "0.1.0",
+  "description": "Claims reviewed invoice intake jobs and fills Qoyod draft forms in the logged-in Chrome session.",
+  "minimum_chrome_version": "114",
+  "permissions": ["activeTab", "storage", "scripting", "sidePanel"],
+  "host_permissions": [
+    "http://localhost:8787/*",
+    "http://127.0.0.1:8787/*",
+    "https://*/*",
+    "https://qoyod.com/*",
+    "https://*.qoyod.com/*"
+  ],
+  "action": {
+    "default_title": "Open Qoyod Filler"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://qoyod.com/*", "https://*.qoyod.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

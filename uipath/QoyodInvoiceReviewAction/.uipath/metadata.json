@@ -1,0 +1,9 @@
+{
+  "name": "qoyodinvoicereviewaction",
+  "displayName": "QoyodInvoiceReviewAction",
+  "version": "0.1.0",
+  "description": "Qoyod invoice review Action Center app for Maestro Case finance review.",
+  "author": "UiPath Developer",
+  "contentType": "webapp",
+  "createdAt": "2026-06-17T18:35:06.235Z"
+}
