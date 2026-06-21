@@ -44,6 +44,47 @@ $env:OPENAI_API_KEY="<openai-key>"
 $env:FILLER_API_TOKEN="<shared-extension-token>"
 ```
 
+## 1A. Optional Phone And Maestro HTTPS Tunnels
+
+For local desktop-only testing, use `http://localhost:5173`.
+
+For phone testing or live Maestro callbacks, keep `npm run dev` running and start temporary Cloudflare tunnels:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\dev-tunnels.ps1 start
+```
+
+The script prints two URLs:
+
+- Web tunnel: open this URL on the phone. It points to the PWA on local port `5173`.
+- API tunnel: use this URL for Maestro callbacks. The script writes it to ignored local `.env` as `PUBLIC_API_BASE_URL`.
+
+Check tunnel status:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\dev-tunnels.ps1 status
+```
+
+Stop both tunnels when testing is done:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\dev-tunnels.ps1 stop
+```
+
+After starting tunnels, run:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\maestro-preflight.ps1
+```
+
+Expected result: `PUBLIC_API_BASE_URL reachability shape - public HTTPS URL available for Maestro callbacks`.
+
+If the Maestro case reads the backend URL from the Orchestrator asset `InvoiceIntakeApiBaseUrl`, update that asset whenever the API tunnel URL changes:
+
+```powershell
+uip or assets update <asset-id> "<api-tunnel-url>" --folder-path "Finance/InvoiceIntake" --output json
+```
+
 ## 2. Capture Invoices
 
 1. Open the PWA on a phone or desktop browser.

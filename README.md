@@ -19,6 +19,47 @@ Open `http://localhost:5173`. The API runs on `http://localhost:8787`.
 
 For the complete operator walkthrough, see `docs/USER_GUIDE.md`.
 
+## Temporary HTTPS Tunnels
+
+Use this when Maestro needs to call the local API or when testing the PWA from a phone without publishing the app.
+
+Start the local app first:
+
+```powershell
+npm run dev
+```
+
+Then start both HTTPS tunnels:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\dev-tunnels.ps1 start
+```
+
+The script creates:
+
+- API tunnel for `http://localhost:8787`, used by Maestro callbacks and `PUBLIC_API_BASE_URL`.
+- Web tunnel for `http://localhost:5173`, opened on the phone for capture/review testing.
+
+Check current tunnel URLs:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\dev-tunnels.ps1 status
+```
+
+Stop both tunnels:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\dev-tunnels.ps1 stop
+```
+
+The script updates ignored local `.env` with the current API tunnel URL. Tunnel URLs are temporary; restart tunnels and rerun preflight before each live Maestro demo.
+
+If Maestro reads `InvoiceIntakeApiBaseUrl` from Orchestrator assets, update that asset after the API tunnel changes:
+
+```powershell
+uip or assets update <asset-id> "<api-tunnel-url>" --folder-path "Finance/InvoiceIntake" --output json
+```
+
 ## Local Env
 
 Copy `.env.example` and set the local secrets you have:
