@@ -17,7 +17,7 @@ import {
   Wand2
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { BatchDetails, BatchSummary, CaseStage, DestinationPlatform, IntakeJob, InvoiceDraft, InvoiceLineItem, JobStatus, QoyodMapping, QoyodMappingRule } from "../shared/invoice";
+import type { BatchDetails, BatchSummary, CaseStage, DestinationPlatform, DestinationState, IntakeJob, InvoiceDraft, InvoiceLineItem, JobStatus, QoyodMapping, QoyodMappingRule } from "../shared/invoice";
 import { caseStages, deriveHeaderTotalsFromLines, destinationLabel, normalizeInvoiceDraft, recalculateLineTotals } from "../shared/invoice";
 import { decodeZatcaTlv } from "../shared/zatca";
 import {
@@ -120,8 +120,85 @@ function destinationsForJob(job: IntakeJob | null): DestinationPlatform[] {
 function destinationSummary(job: IntakeJob): string {
   if (!job.destinations?.length) return "Qoyod";
   return job.destinations
-    .map((destination) => `${destinationLabel(destination.platform)}: ${destination.status.replace(/_/g, " ")}`)
+    .map((destination) => `${destinationLabel(destination.platform)}: ${destination.status.replace(/_/g, " ")}${destination.externalReference ? ` ${destination.externalReference}` : ""}`)
     .join(" | ");
+}
+
+function destinationFor(job: IntakeJob | null, platform: DestinationPlatform): DestinationState | undefined {
+  return job?.destinations?.find((destination) => destination.platform === platform);
+}
+
+function reviewOutcome(job: IntakeJob, requestedDestinations: DestinationPlatform[]): { level: "notice" | "error"; message: string } {
+  if (!job.validation?.canSubmitToRobot) {
+    const suffix = requestedDestinations.includes("erpnext") ? " ERPNext posting was skipped." : "";
+    return { level: "notice", message: `Review saved with blocking checks.${suffix}` };
+  }
+
+  const erpNext = destinationFor(job, "erpnext");
+  if (requestedDestinations.includes("erpnext")) {
+    if (erpNext?.status === "draft_created") {
+      const reference = erpNext.externalReference ? ` ${erpNext.externalReference}` : "";
+      const q = requestedDestinations.includes("qoyod") ? " Qoyod remains ready for draft filling." : "";
+      return { level: "notice", message: `ERPNext Purchase Invoice draft${reference} created.${q}` };
+    }
+    if (erpNext?.status === "error") {
+      return { level: "error", message: `ERPNext posting failed: ${erpNext.errorMessage || erpNext.errorCode || "Unknown ERPNext error."}` };
+    }
+    if (erpNext?.status === "ready") {
+      return { level: "notice", message: "Review saved. ERPNext is ready but no draft was created yet." };
+    }
+  }
+
+  return { level: "notice", message: `Invoice is ready for ${requestedDestinations.map(destinationLabel).join(", ")}.` };
+}
+
+function batchReviewOutcome(batch: BatchDetails, requestedDestinations: DestinationPlatform[]): { level: "notice" | "error"; message: string } {
+  if (!requestedDestinations.includes("erpnext")) {
+    return { level: "notice", message: `Batch review saved. Valid invoices are ready for ${requestedDestinations.map(destinationLabel).join(", ")}.` };
+  }
+
+  const erpNextStates = batch.jobs.map((job) => destinationFor(job, "erpnext")).filter(Boolean) as DestinationState[];
+  const created = erpNextStates.filter((destination) => destination.status === "draft_created").length;
+  const failed = erpNextStates.filter((destination) => destination.status === "error");
+  const blocked = batch.jobs.filter((job) => !job.validation?.canSubmitToRobot).length;
+
+  if (failed.length) {
+    return {
+      level: "error",
+      message: `Batch review saved. ERPNext created ${created} draft(s), ${failed.length} failed, and ${blocked} invoice(s) still need review.`
+    };
+  }
+
+  return {
+    level: "notice",
+    message: `Batch review saved. ERPNext created ${created} draft(s)${blocked ? `; ${blocked} invoice(s) still need review` : ""}.`
+  };
+}
+
+function DestinationStatusPanel({ job }: { job: IntakeJob }) {
+  if (!job.destinations?.length) return null;
+
+  return (
+    <div className="destination-status-panel">
+      <h3>Destination Status</h3>
+      {job.destinations.map((destination) => (
+        <div className={`destination-status-card status-${destination.status}`} key={destination.platform}>
+          <span>
+            <strong>{destinationLabel(destination.platform)}</strong>
+            <small>{destination.status.replace(/_/g, " ")}</small>
+          </span>
+          {destination.externalUrl ? (
+            <a href={destination.externalUrl} target="_blank" rel="noreferrer">
+              {destination.externalReference || "Open draft"}
+            </a>
+          ) : destination.externalReference ? (
+            <code>{destination.externalReference}</code>
+          ) : null}
+          {destination.errorMessage && <p>{destination.errorMessage}</p>}
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function compactJson(value: unknown): string {
@@ -525,15 +602,21 @@ export function App() {
 
   async function submitReview() {
     if (!selectedJob || !draft) return;
+    const requestedDestinations = [...selectedDestinations];
     setBusy(true);
     setError("");
     setNotice("");
     try {
-      const updated = await saveReview(selectedJob.jobId, draft, selectedDestinations);
+      const updated = await saveReview(selectedJob.jobId, draft, requestedDestinations);
       setCurrentBatch((batch) => mergeBatchJob(batch, updated));
       setDraft(normalizeInvoiceDraft(updated.draft));
       setSelectedDestinations(destinationsForJob(updated));
-      setNotice(updated.validation?.canSubmitToRobot ? `Invoice is ready for ${selectedDestinations.map(destinationLabel).join(", ")}.` : "Review saved with blocking checks.");
+      const outcome = reviewOutcome(updated, requestedDestinations);
+      if (outcome.level === "error") {
+        setError(outcome.message);
+      } else {
+        setNotice(outcome.message);
+      }
       if (updated.batchId) await refreshBatch(updated.batchId);
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : String(requestError));
@@ -561,20 +644,27 @@ export function App() {
 
   async function saveAllReviewed() {
     if (!currentBatch || currentBatch.batch.batchId === "unbatched") return;
+    const requestedDestinations = [...selectedDestinations];
     const reviews = currentBatch.jobs.map((job) => ({
       jobId: job.jobId,
       draft: job.jobId === selectedJobId && draft ? draft : job.draft,
-      destinations: selectedDestinations
+      destinations: requestedDestinations
     }));
     setBusy(true);
     setError("");
+    setNotice("");
     try {
       const updated = await bulkReviewBatch(currentBatch.batch.batchId, reviews);
       setCurrentBatch(updated);
       const nextJob = updated.jobs.find((job) => job.jobId === selectedJobId) ?? updated.jobs[0] ?? null;
       setDraft(nextJob ? normalizeInvoiceDraft(nextJob.draft) : null);
       setSelectedDestinations(destinationsForJob(nextJob));
-      setNotice(`Batch review saved. Valid invoices are ready for ${selectedDestinations.map(destinationLabel).join(", ")}.`);
+      const outcome = batchReviewOutcome(updated, requestedDestinations);
+      if (outcome.level === "error") {
+        setError(outcome.message);
+      } else {
+        setNotice(outcome.message);
+      }
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : String(requestError));
     } finally {
@@ -781,7 +871,7 @@ export function App() {
                   </button>
                   <button className="secondary-button" type="button" disabled={busy || currentBatch.batch.batchId === "unbatched"} onClick={saveAllReviewed}>
                     <Save size={18} />
-                    Save batch review
+                    {selectedDestinations.includes("erpnext") ? "Save batch review and post" : "Save batch review"}
                   </button>
                 </div>
               </div>
@@ -899,6 +989,8 @@ export function App() {
                       </div>
                     </div>
 
+                    <DestinationStatusPanel job={selectedJob} />
+
                     <div className="line-table">
                       {draft.lineItems.map((line) => (
                         <div className="line-row" key={line.id}>
@@ -967,7 +1059,7 @@ export function App() {
 
                     <button className="primary-button" type="button" disabled={busy} onClick={submitReview}>
                       <Save size={18} />
-                      Save invoice review
+                      {selectedDestinations.includes("erpnext") ? "Save review and post" : "Save invoice review"}
                     </button>
                   </section>
 
