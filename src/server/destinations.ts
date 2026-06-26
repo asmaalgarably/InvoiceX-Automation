@@ -29,7 +29,13 @@ export function mergeDestinationStates(
   current: DestinationState[] | undefined,
   nextStates: DestinationState[]
 ): DestinationState[] {
-  return nextStates.reduce((destinations, state) => upsertDestinationState(destinations, state), current ?? []);
+  return nextStates.reduce((destinations, state) => {
+    const existing = destinations.find((destination) => destination.platform === state.platform);
+    if (state.status === "ready" && existing?.status === "draft_created") {
+      return destinations;
+    }
+    return upsertDestinationState(destinations, state);
+  }, current ?? []);
 }
 
 export function releasedJobStatus(validation: ValidationResult, platforms: DestinationPlatform[]): JobStatus {
@@ -39,6 +45,14 @@ export function releasedJobStatus(validation: ValidationResult, platforms: Desti
 
 export function readyDestinationMessage(platforms: DestinationPlatform[]): string {
   return `Review complete. Destinations ready: ${platforms.map(destinationLabel).join(", ")}.`;
+}
+
+export function erpNextReviewPostAction(job: IntakeJob, platforms: DestinationPlatform[]): "post" | "skip_unselected" | "skip_invalid" | "skip_created" {
+  if (!platforms.includes("erpnext")) return "skip_unselected";
+  if (!job.validation?.canSubmitToRobot) return "skip_invalid";
+  const erpNext = job.destinations?.find((destination) => destination.platform === "erpnext");
+  if (erpNext?.status === "draft_created") return "skip_created";
+  return "post";
 }
 
 export function hasActiveQoyodDestination(job: IntakeJob): boolean {

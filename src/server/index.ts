@@ -11,6 +11,7 @@ import { decodeZatcaTlv } from "../shared/zatca";
 import {
   destinationPlatformsFromBody,
   destinationReadyStates,
+  erpNextReviewPostAction,
   mergeDestinationStates,
   readyDestinationMessage,
   releasedJobStatus,
@@ -260,7 +261,7 @@ function reviewPatch(
   };
 }
 
-async function postDestinationForJob(jobId: string, platform: DestinationPlatform, source: "api" | "case"): Promise<{ job: IntakeJob; ok: boolean }> {
+async function postDestinationForJob(jobId: string, platform: DestinationPlatform, source: "api" | "case" | "review" | "batch-review"): Promise<{ job: IntakeJob; ok: boolean; skipped?: boolean }> {
   if (platform !== "erpnext") {
     throw new Error(`Destination ${platform} does not support backend API posting.`);
   }
@@ -268,6 +269,26 @@ async function postDestinationForJob(jobId: string, platform: DestinationPlatfor
   const current = await jobStore.get(jobId);
   if (!current) {
     throw new Error(`Job ${jobId} was not found.`);
+  }
+
+  const existingDestination = current.destinations?.find((destination) => destination.platform === platform);
+  if (existingDestination?.status === "draft_created") {
+    const nextStatus = statusAfterDestinationPosting(current, platform, "success");
+    if (current.status === nextStatus) {
+      return { job: current, ok: true, skipped: true };
+    }
+    const job = await jobStore.update(current.jobId, {
+      status: nextStatus,
+      events: [
+        ...current.events,
+        {
+          at: new Date().toISOString(),
+          level: "info",
+          message: "ERPNext Purchase Invoice draft already exists; posting skipped."
+        }
+      ]
+    });
+    return { job, ok: true, skipped: true };
   }
 
   const validation = current.validation ?? reconcileDraft(current.draft);
@@ -361,6 +382,33 @@ async function postDestinationForJob(jobId: string, platform: DestinationPlatfor
     });
     return { job, ok: false };
   }
+}
+
+async function postErpNextAfterReview(job: IntakeJob, platforms: DestinationPlatform[], source: "review" | "batch-review"): Promise<IntakeJob> {
+  const action = erpNextReviewPostAction(job, platforms);
+  if (action === "post") {
+    const result = await postDestinationForJob(job.jobId, "erpnext", source);
+    return result.job;
+  }
+
+  if (action === "skip_created") {
+    const nextStatus = statusAfterDestinationPosting(job, "erpnext", "success");
+    if (job.status !== nextStatus) {
+      return jobStore.update(job.jobId, {
+        status: nextStatus,
+        events: [
+          ...job.events,
+          {
+            at: new Date().toISOString(),
+            level: "info",
+            message: "ERPNext Purchase Invoice draft already exists; review saved without reposting."
+          }
+        ]
+      });
+    }
+  }
+
+  return job;
 }
 
 function casePatchFromBody(body: unknown): Pick<IntakeJob, "caseInstanceId" | "caseJobKey" | "caseExternalId" | "caseStage"> {
@@ -881,7 +929,8 @@ app.post("/api/batches/:batchId/bulk-review", asyncHandler(async (request, respo
     const platforms = "destinations" in payload || "destinationPlatforms" in payload
       ? destinationPlatformsFromBody(payload)
       : destinationPlatformsFromBody(request.body);
-    await jobStore.update(jobId, reviewPatch(current, draft, validation, platforms, "Batch review saved."));
+    const reviewed = await jobStore.update(jobId, reviewPatch(current, draft, validation, platforms, "Batch review saved."));
+    await postErpNextAfterReview(reviewed, platforms, "batch-review");
   }
 
   const updated = await jobStore.getBatchDetails(batchId);
@@ -1302,9 +1351,11 @@ app.post("/api/jobs/:jobId/review", asyncHandler(async (request, response) => {
 
   const draft = normalizeInvoiceDraft(invoiceDraftSchema.parse(request.body.draft));
   const validation = reconcileDraft(draft);
-  const job = await jobStore.update(current.jobId, {
-    ...reviewPatch(current, draft, validation, destinationPlatformsFromBody(request.body))
+  const platforms = destinationPlatformsFromBody(request.body);
+  const reviewed = await jobStore.update(current.jobId, {
+    ...reviewPatch(current, draft, validation, platforms)
   });
+  const job = await postErpNextAfterReview(reviewed, platforms, "review");
 
   response.json({ job });
 }));

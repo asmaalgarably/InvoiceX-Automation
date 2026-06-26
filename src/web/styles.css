@@ -783,6 +783,48 @@ button:disabled {
   gap: 10px 16px;
 }
 
+.destination-status-panel {
+  display: grid;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  background: #f7faf9;
+}
+
+.destination-status-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 12px;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  background: #fff;
+}
+
+.destination-status-card span {
+  display: grid;
+  gap: 2px;
+}
+
+.destination-status-card small {
+  color: var(--muted);
+}
+
+.destination-status-card a,
+.destination-status-card code {
+  color: var(--success);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.destination-status-card p {
+  grid-column: 1 / -1;
+  color: var(--danger);
+  margin: 0;
+}
+
 .checkbox-field {
   display: flex;
   align-items: center;
