@@ -349,6 +349,34 @@ button:disabled {
   margin-top: 18px;
 }
 
+.batch-list-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.compact-button {
+  min-height: 34px;
+  padding: 6px 10px;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.batch-list-items {
+  display: grid;
+  gap: 8px;
+  max-height: 114px;
+  overflow: hidden;
+}
+
+.batch-list-items.expanded {
+  max-height: min(50vh, 480px);
+  overflow: auto;
+  padding-right: 2px;
+}
+
 .batch-row,
 .invoice-row,
 .metric {
@@ -391,6 +419,8 @@ button:disabled {
 .batch-panel {
   display: grid;
   gap: 14px;
+  align-content: start;
+  grid-auto-rows: max-content;
   min-width: 0;
 }
 
@@ -436,8 +466,11 @@ button:disabled {
 
 .case-stage-strip {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(7, minmax(112px, 1fr));
   gap: 6px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding-bottom: 2px;
 }
 
 .case-stage {
@@ -690,13 +723,16 @@ button:disabled {
   display: grid;
   grid-template-columns: repeat(4, minmax(90px, 1fr));
   gap: 10px;
+  align-content: start;
+  align-items: start;
 }
 
 .metric {
   display: grid;
   gap: 2px;
+  align-content: start;
   justify-items: start;
-  min-height: 58px;
+  min-height: 68px;
   padding: 10px 12px;
   text-align: left;
 }
@@ -713,6 +749,7 @@ button:disabled {
 .batch-table {
   display: grid;
   gap: 6px;
+  align-content: start;
   max-width: 100%;
   min-width: 0;
   overflow-x: auto;
@@ -725,8 +762,9 @@ button:disabled {
   grid-template-columns: 42px minmax(160px, 1.5fr) minmax(100px, 1fr) minmax(100px, 0.8fr) minmax(120px, 0.8fr) minmax(92px, 0.7fr);
   gap: 10px;
   align-items: center;
+  align-content: center;
   min-width: 760px;
-  min-height: auto;
+  min-height: 56px;
   padding: 10px;
   text-align: left;
 }

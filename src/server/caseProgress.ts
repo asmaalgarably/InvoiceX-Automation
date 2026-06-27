@@ -130,7 +130,7 @@ export function buildCaseBatchProgress(details: BatchDetails, publicWebAppUrl?: 
     batchId: details.batch.batchId,
     batchName: details.batch.name,
     batchStatus: details.batch.status,
-    caseStage: details.batch.caseStage ?? "Capture Intake",
+    caseStage: nextStage,
     nextStage,
     caseStatus: hasErrors ? "exception" : closed ? "closed" : "active",
     reviewUrl: reviewUrlForBatch(publicWebAppUrl, details.batch.batchId),

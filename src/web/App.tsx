@@ -52,6 +52,7 @@ const statusLabels: Record<JobStatus, string> = {
 };
 
 const destinationOptions: DestinationPlatform[] = ["qoyod", "erpnext"];
+const livePollingStatuses = new Set<JobStatus>(["uploaded", "queued", "extracting", "qoyod_filling", "robot_running", "posting"]);
 
 const emptyMapping: QoyodMapping = {
   type: "expense",
@@ -428,6 +429,7 @@ export function App() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [statusFilter, setStatusFilter] = useState<JobStatus | "all">("all");
+  const [batchesExpanded, setBatchesExpanded] = useState(false);
   const [cameraActive, setCameraActive] = useState(false);
   const [scanMessage, setScanMessage] = useState("");
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -443,6 +445,15 @@ export function App() {
     const jobs = currentBatch?.jobs ?? [];
     return statusFilter === "all" ? jobs : jobs.filter((job) => job.status === statusFilter);
   }, [currentBatch, statusFilter]);
+  const visibleBatches = useMemo(() => {
+    if (batchesExpanded || batches.length <= 2) return batches;
+    const selected = currentBatch ? batches.find((batch) => batch.batchId === currentBatch.batch.batchId) : undefined;
+    if (!selected || batches.slice(0, 2).some((batch) => batch.batchId === selected.batchId)) {
+      return batches.slice(0, 2);
+    }
+    const firstOther = batches.find((batch) => batch.batchId !== selected.batchId);
+    return [selected, ...(firstOther ? [firstOther] : [])];
+  }, [batches, batchesExpanded, currentBatch]);
 
   useEffect(() => {
     refreshAll().catch((requestError) => setError(requestError instanceof Error ? requestError.message : String(requestError)));
@@ -450,13 +461,23 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    if (!currentBatch || !currentBatch.jobs.some((job) => ["queued", "extracting", "qoyod_filling", "robot_running", "posting"].includes(job.status))) {
+    const shouldPoll = Boolean(
+      currentBatch && (
+        currentBatch.jobs.some((job) => livePollingStatuses.has(job.status)) ||
+        (
+          currentBatch.batch.caseRuntimeMode === "live" &&
+          currentBatch.batch.caseStatus === "active" &&
+          currentBatch.batch.caseStage !== "Closed"
+        )
+      )
+    );
+    if (!currentBatch || !shouldPoll) {
       return;
     }
 
     const timer = window.setInterval(() => {
       refreshBatch(currentBatch.batch.batchId).catch((requestError) => setError(requestError instanceof Error ? requestError.message : String(requestError)));
-    }, 2500);
+    }, 3000);
 
     return () => window.clearInterval(timer);
   }, [currentBatch]);
@@ -834,23 +855,35 @@ export function App() {
           </button>
 
           <div className="batch-list">
-            <h2>Batches</h2>
+            <div className="batch-list-heading">
+              <h2>Batches</h2>
+              {batches.length > 2 && (
+                <button className="secondary-button compact-button" type="button" onClick={() => setBatchesExpanded((expanded) => !expanded)}>
+                  {batchesExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                  {batchesExpanded ? "Show less" : `Show all ${batches.length}`}
+                </button>
+              )}
+            </div>
             {batches.length === 0 ? (
               <div className="notice">No batches yet.</div>
-            ) : batches.map((batch) => (
-              <button
-                key={batch.batchId}
-                className={`batch-row ${currentBatch?.batch.batchId === batch.batchId ? "active" : ""}`}
-                type="button"
-                onClick={() => refreshBatch(batch.batchId)}
-              >
-                <FolderOpen size={16} />
-                <span>
-                  <strong>{batch.name}</strong>
-                  <small>{batch.totalJobs} invoices · {batch.status.replace(/_/g, " ")}</small>
-                </span>
-              </button>
-            ))}
+            ) : (
+              <div className={batchesExpanded ? "batch-list-items expanded" : "batch-list-items"}>
+                {visibleBatches.map((batch) => (
+                  <button
+                    key={batch.batchId}
+                    className={`batch-row ${currentBatch?.batch.batchId === batch.batchId ? "active" : ""}`}
+                    type="button"
+                    onClick={() => refreshBatch(batch.batchId)}
+                  >
+                    <FolderOpen size={16} />
+                    <span>
+                      <strong>{batch.name}</strong>
+                      <small>{batch.totalJobs} invoices · {batch.status.replace(/_/g, " ")}</small>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {scanMessage && <div className="notice">{scanMessage}</div>}

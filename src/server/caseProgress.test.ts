@@ -63,6 +63,7 @@ describe("case batch progress", () => {
   it("moves extraction-complete invoices to finance review", () => {
     const progress = buildCaseBatchProgress(batchDetails([jobFixture()], "needs_review"), "https://demo.example");
 
+    expect(progress.caseStage).toBe("Finance Review And Mapping");
     expect(progress.nextStage).toBe("Finance Review And Mapping");
     expect(progress.reviewUrl).toBe("https://demo.example/?batchId=batch-1");
   });
