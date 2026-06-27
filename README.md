@@ -17,7 +17,7 @@ Track 1 pilot for invoice intake into Qoyod and ERPNext without IXP or RPA runti
 
 ## System Architecture
 
-The system is built on a **three-layer architecture** with UiPath Maestro as the state machine orchestrator, API Workflows as thin polling messengers, and an Express server as the worker that does all the real work.
+The system is built on a **three-layer architecture** with UiPath Maestro as the state machine orchestrator, API Workflows as thin polling messengers, and an Express server as the worker.
 
 ###  Architecture
 
