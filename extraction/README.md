@@ -1,6 +1,6 @@
-# InvoiceX Extraction Backend
+# Fatoorah AI Extraction Backend
 
-This folder contains the invoice extraction engine for InvoiceX.
+This folder contains the invoice extraction engine for Fatoorah AI.
 
 It is a standalone Django service that receives invoice images or PDFs, extracts structured invoice data with AI, validates the invoice math, stores the result, and shows processed invoices in a local dashboard.
 
@@ -11,7 +11,7 @@ You can run it by itself, test it with curl, and use it as a normal HTTP invoice
 
 ## What this backend does
 
-The extraction backend turns invoice files into structured JSON.
+The Fatoorah AI extraction backend turns invoice files into structured JSON.
 
 It can:
 
